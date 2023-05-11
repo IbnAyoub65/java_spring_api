@@ -3,18 +3,15 @@ package com.inscription.devoir.helper;
 import com.inscription.devoir.exception.InscriptionException;
 import com.inscription.devoir.models.*;
 import com.inscription.devoir.repositories.*;
-import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -26,16 +23,18 @@ public class InscriptionHelper {
     private final EtudiantRepositorie etudiantRepositorie;
     private final NiveauRepositorie niveauRepositorie;
     private final FilièreRepositorie filièreRepositorie;
+    private final  PaiementRepositorie paiementRepositorie;
 
 
 
-    public  InscriptionHelper(AnneeScolaireRepositorie anneeScolaireRepositorie, ClasseRepositorie classeRepositorie, EtudiantRepositorie etudiantRepositorie, InscriptionRepositorie inscriptionRepositorie, NiveauRepositorie niveauRepositorie, FilièreRepositorie filièreRepositorie){
+    public  InscriptionHelper(AnneeScolaireRepositorie anneeScolaireRepositorie, ClasseRepositorie classeRepositorie, EtudiantRepositorie etudiantRepositorie, InscriptionRepositorie inscriptionRepositorie, NiveauRepositorie niveauRepositorie, FilièreRepositorie filièreRepositorie, PaiementRepositorie paiementRepositorie){
         this.anneeScolaireRepositorie = anneeScolaireRepositorie;
         this.classeRepositorie = classeRepositorie;
         this.etudiantRepositorie = etudiantRepositorie;
         this.inscriptionRepositorie = inscriptionRepositorie;
         this.niveauRepositorie = niveauRepositorie;
         this.filièreRepositorie = filièreRepositorie;
+        this.paiementRepositorie = paiementRepositorie;
     }
 
     @Transactional
@@ -44,6 +43,7 @@ public class InscriptionHelper {
         addClasseInscription(inscription);
         addAnneeScolaire(inscription);
         verifyEtudiantandInscription(inscription);
+        procedureInscriptionPaiement(inscription);
         return inscriptionRepositorie.save(inscription);
 
     }
@@ -115,9 +115,7 @@ public class InscriptionHelper {
 
 
 
- public void enregistrePaiement(Inscription inscription, Double montant,String mois){
 
- }
 
    private void validEtudiantInscription(Inscription inscription){
             LocalDate localDate = inscription.getEtudiant().getDatenaiss().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -150,8 +148,42 @@ public void inscriptionPaiement(Inscription inscription,Double depotInitial,Doub
 
         Double rest = depotInitial - montantObligatoire;
         if(rest >= mensualte){
-
+            int nbrmMois = (int)Math.floor(rest/mensualte);
+            Double sommeRestant = rest % mensualte;
+            inscription.getEtudiant().setSolde( sommeRestant);
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.MONTH,11);
+            for (int i = 0; i<nbrmMois; i++){
+                Paiement paiement = new Paiement();
+                paiement.setInscription(inscription);
+                calendar.add(Calendar.MONTH,i);
+                paiement.setMois(new SimpleDateFormat("MMMM").format(calendar.getTime()));
+                paiement.setAmount(mensualte);
+                paiements.add(paiement);
+            }
         }
+
+        creerPaiement(paiements);
+}
+
+public void creerPaiement(List<Paiement> paiements){
+        paiementRepositorie.saveAll(paiements);
+}
+
+
+public void procedureInscriptionPaiement(Inscription inscription){
+
+        Double mensualite =  (double) inscription.getClasse().getMensualite();
+        Double fraisInscription = (double) inscription.getClasse().getFraisInscription();
+        Double sommeObligatoire = mensualite + fraisInscription;
+        Double initialDepot = inscription.getInitialDeposit();
+        if(initialDepot < sommeObligatoire){
+            throw  new  InscriptionException("il faut déposer au minimum " + sommeObligatoire);
+        }else{
+            inscriptionPaiement(inscription,initialDepot,sommeObligatoire,mensualite);
+        }
+
+
 }
 /*
     @Transactional

@@ -41,6 +41,7 @@ public class Etudiant {
     @OneToMany(mappedBy = "etudiant")
     private List<Inscription> inscriptions;
 
+    @Column(nullable = true)
     private Double solde;
 
 

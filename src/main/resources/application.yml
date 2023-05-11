@@ -22,4 +22,4 @@ spring:
 
 # Server configuration
 server:
-    port: 8080 #set your port
+    port: 8085 #set your port
