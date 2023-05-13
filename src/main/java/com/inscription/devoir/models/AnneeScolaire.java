@@ -39,5 +39,4 @@ public class AnneeScolaire {
     @OneToMany(mappedBy = "anneeScolaire",cascade = CascadeType.ALL)
     private List<Inscription> inscriptions;
 
-
 }

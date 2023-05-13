@@ -1,8 +1,28 @@
-
+app:
+    keycloak:
+        admin:
+         username: admin
+         password: admin
+        login:
+            url: http://localhost:8080/realms/demo-realm-app/protocol/openid-connect/token
+        server:
+            url: http://keycloak:8080
+        client-secret: Mro9OLZcQL59FXKwf0lkMDHuhyycT5Ty
+        realm:
+         name: demo-app-realm
+        client-id: demo_inscription
+        grant-type: password
+keycloak:
+    use-resource-role-mappings: 'true'
+    ssl-required: external
 spring:
-
-    # Security configuration
-
+    security:
+        oauth2:
+            resourceserver:
+                jwt:
+                    issuer-uri: http://localhost:8080/realms/demo-realm-app
+    profiles:
+        active: development
     # Database
     datasource:
         driver-class-name: org.postgresql.Driver
@@ -13,13 +33,5 @@ spring:
     jpa:
         hibernate:
             ddl-auto: update # When you launch the application for the first time - switch "none" at "create"
-        show-sql: true
-        database: postgresql
-        database-platform: org.hibernate.dialect.PostgreSQLDialect
-        open-in-view: false
-        generate-ddl: true
-# Logger configuration
-
-# Server configuration
 server:
-    port: 8085 #set your port
+    port: 8083
