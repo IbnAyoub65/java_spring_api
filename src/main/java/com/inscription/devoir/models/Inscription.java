@@ -41,7 +41,7 @@ public class Inscription {
     @JoinColumn(name = "classe" ,referencedColumnName = "id")
     private Classe  classe;
 
-
+    @JsonIgnore
     @OneToMany(mappedBy = "inscription",cascade = CascadeType.ALL)
     private List<Paiement> paiements;
 

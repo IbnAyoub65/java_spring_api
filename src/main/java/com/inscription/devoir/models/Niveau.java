@@ -1,5 +1,6 @@
 package com.inscription.devoir.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,6 +23,7 @@ public class Niveau {
 
     private String libelle;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "niveau",cascade = CascadeType.ALL)
     private List<Classe> classes;
 

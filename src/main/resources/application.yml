@@ -4,10 +4,11 @@ app:
          username: admin
          password: admin
         login:
-            url: http://localhost:8080/realms/demo-realm-app/protocol/openid-connect/token
+            #url: http://localhost:8080/auth/realms/demo-app-realm/protocol/openid-connect/token
+            url: http://keycloak:8080/auth/realms/demo-app-realm/protocol/openid-connect/token
         server:
             url: http://keycloak:8080
-        client-secret: Mro9OLZcQL59FXKwf0lkMDHuhyycT5Ty
+        client-secret: 8WDxGLqI2W449oG339mKTmF5kKQJwOj5
         realm:
          name: demo-app-realm
         client-id: demo_inscription
@@ -20,15 +21,16 @@ spring:
         oauth2:
             resourceserver:
                 jwt:
-                    issuer-uri: http://localhost:8080/realms/demo-realm-app
+                    #issuer-uri: http://localhost:8080/auth/realms/demo-app-realm
+                    issuer-uri: http://keycloak:8080/auth/realms/demo-app-realm
     profiles:
         active: development
     # Database
     datasource:
         driver-class-name: org.postgresql.Driver
-        url: jdbc:postgresql://localhost:5432/inscriptions
-        username: postgres
-        password: postgres
+        url: jdbc:postgresql://dbpostgresql:5432/postgres
+        username: myowner
+        password: password
     # JPA properties
     jpa:
         hibernate:

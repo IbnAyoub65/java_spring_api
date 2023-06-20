@@ -30,12 +30,12 @@ public class Classe {
 
     private int autreFrais;
 
-    @JsonIgnore
+    //@JsonIgnore
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "filière", referencedColumnName = "id")
     private Filière filière;
 
-    @JsonIgnore
+    //@JsonIgnore
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "niveau" ,referencedColumnName = "id")
     private Niveau niveau;

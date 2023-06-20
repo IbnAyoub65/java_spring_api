@@ -87,11 +87,32 @@ public class InscriptionHelper {
 
     public void addFiliereCLasse(Classe classe){
 
-        classe.setFilière(classe.getFilière());
+        Filière filière = classe.getFilière();
+        if(filière.getId() == null){
+            filière = new Filière();
+        }else {
+            filière =filièreRepositorie.findById(filière.getId()).orElse(null);
+            if(filière != null){
+                classe.setFilière(filière);
+            }else{
+                throw  new  InscriptionException("Cette filière n'existe pas");
+            }
+        }
+
     }
 
     public void addNiveauClasse(Classe classe){
-        classe.setNiveau(classe.getNiveau());
+        Niveau niveau = classe.getNiveau();
+        if(niveau.getId() == null){
+            niveau = new Niveau();
+        }else {
+            niveau = niveauRepositorie.findById(niveau.getId()).orElse(null);
+            if(niveau != null){
+                classe.setNiveau(niveau);
+            }else{
+                throw  new  InscriptionException("Cet niveau n'existe pas");
+            }
+        }
     }
 
 
@@ -105,6 +126,7 @@ public class InscriptionHelper {
             inscription.setEtudiant(etudiant);
         }else{
             etudiant = etudiantRepositorie.findById(etudiant.getId()).orElse(null);
+
             if(etudiant != null){
               //  etudiant = etudiantRepositorie.save(etudiant);
                 verifyEtudiantByAnneeByClasse(inscription.getEtudiant(),inscription.getClasse(),inscription.getAnneeScolaire());
@@ -131,7 +153,24 @@ public class InscriptionHelper {
     }
 
 
+    public int calculateNumberOfMonths(Date startDate, Date endDate) {
+        Calendar startCalendar = Calendar.getInstance();
+        startCalendar.setTime(startDate);
 
+        Calendar endCalendar = Calendar.getInstance();
+        endCalendar.setTime(endDate);
+
+        int startYear = startCalendar.get(Calendar.YEAR);
+        int startMonth = startCalendar.get(Calendar.MONTH);
+
+        int endYear = endCalendar.get(Calendar.YEAR);
+        int endMonth = endCalendar.get(Calendar.MONTH);
+
+        int monthsInYear = 12;
+        int numberOfMonths = (endYear - startYear) * monthsInYear + (endMonth - startMonth);
+
+        return numberOfMonths;
+    }
 
     public void verifyEtudiantByAnneeByClasse(Etudiant etudiant,Classe classe,AnneeScolaire anneeScolaire) throws InscriptionException {
         Optional<Inscription> existingInscription = inscriptionRepositorie.findByEtudiantAndClasseAndAnneeScolaire(etudiant,classe,anneeScolaire);
@@ -149,13 +188,21 @@ public void inscriptionPaiement(Inscription inscription,Double depotInitial,Doub
         paiement1.setAmount(mensualte);
         paiements.add(paiement1);
 
+        Double totalMois= (double) inscription.getClasse().getMensualite() * 9;
+        Double montantTotalAnnuelle = totalMois + inscription.getClasse().getFraisInscription() +inscription.getClasse().getAutreFrais();
+
+        if(inscription.getInitialDeposit()>montantTotalAnnuelle){
+            throw  new InscriptionException("Ce que vous voulez déposer est trop elévé");
+        }
+
         Double rest = depotInitial - montantObligatoire;
         if(rest >= mensualte){
             int nbrmMois = (int)Math.floor(rest/mensualte);
             Double sommeRestant = rest % mensualte;
-            inscription.getEtudiant().setSolde( sommeRestant);
+            inscription.getEtudiant().setSolde(sommeRestant);
             Calendar calendar = Calendar.getInstance();
-            calendar.set(Calendar.MONTH,11);
+            calendar.set(Calendar.MONTH, 11);
+           // calendar.setTime(inscription.getDateInscription());
             for (int i = 0; i<nbrmMois; i++){
                 Paiement paiement = new Paiement();
                 paiement.setInscription(inscription);
@@ -188,47 +235,6 @@ public void procedureInscriptionPaiement(Inscription inscription){
 
 
 }
-/*
-    @Transactional
-   public void  proceedPayments(Inscription registration, Double initialDeposit, Double minimumDeposit , Double  mensualite) {
-
-        List<Paiement> payments = new ArrayList<>();
-        // Create payment for November
-        Paiement paymentNov = new Paiement();
-        paymentNov.setInscription(registration);
-        paymentNov.setMois("November");
-        paymentNov.setAmount(mensualite);
-        payments.add(paymentNov);
-        // Check amount after november payment
-        Double remainingBalanceAfterNov = initialDeposit - minimumDeposit;
-        if (remainingBalanceAfterNov >= mensualite) {
-            // Check number of month with the remaining amount
-            int remainingMonths = (int) Math.floor(remainingBalanceAfterNov / mensualite);
-            // See if there is a remaining so i can add to student solde
-            Double remainingAmount = remainingBalanceAfterNov % mensualite;
-            // Incrémenter le solde de l'étudiant
-            registration.getEtudiant().setSolde(registration.getEtudiant().getSolde() + remainingAmount);
-            // Créer des paiements pour les mois restants
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(Calendar.MONTH, 11); // Set month to november
-            for (int i = 0; i < remainingMonths; i++) {
-                Paiement payment = new Paiement();
-                payment.setInscription(registration);
-                calendar.add(Calendar.MONTH, i); // increment month after nov
-                payment.setMois(new SimpleDateFormat("MMMM").format(calendar.getTime()));
-                payment.setAmount(mensualite);
-                payments.add(payment);
-
-            }
-        }
-        // Save payments
-        createPayments(payments);
-    }
-    @Transactional
-    public void createPayments(List<Paiement> payments) {
-        paiementepositori.saveAll(payments);
-    }
- */
 
   public Niveau saveNiveau(Niveau niveau){
       return niveauRepositorie.save(niveau);
@@ -241,7 +247,7 @@ public void procedureInscriptionPaiement(Inscription inscription){
   public AnneeScolaire saveAnneeScolaire(AnneeScolaire anneeScolaire){
         return anneeScolaireRepositorie.save(anneeScolaire);
     }
-
+   // @Transactional
     public Classe saveClasse(Classe classe){
         addFiliereCLasse(classe);
         addNiveauClasse(classe);
@@ -261,48 +267,5 @@ public void procedureInscriptionPaiement(Inscription inscription){
         return etudiantRepositorie.findById(id).orElse(null);
     }
 
-    /*
-    import com.inscription.devoir.models.Inscription;
-import com.inscription.devoir.models.Paiement;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
-import java.util.Calendar;
-import java.util.Date;
-
-@Service
-@Transactional
-public class PaiementService {
-
-    @Autowired
-    private InscriptionRepository inscriptionRepository;
-
-    @Autowired
-    private PaiementRepository paiementRepository;
-
-    public void effectuerPaiementMensuel(UUID inscriptionId, Double montantMensuel) {
-        Inscription inscription = inscriptionRepository.findById(inscriptionId).orElseThrow(() -> new IllegalArgumentException("Inscription non trouvée"));
-        Double montantTotal = montantMensuel * 9;
-
-        Calendar calendar = Calendar.getInstance();
-        Date datePaiement = calendar.getTime();
-
-        for (int i = 1; i <= 9; i++) {
-            Paiement paiement = new Paiement();
-            paiement.setMois("Mois " + i);
-            paiement.setAmount(montantMensuel);
-            paiement.setInscription(inscription);
-            paiementRepository.save(paiement);
-
-            calendar.add(Calendar.MONTH, 1);
-            datePaiement = calendar.getTime();
-        }
-
-        inscription.setDateInscription(datePaiement);
-        inscriptionRepository.save(inscription);
-    }
-}
-
-     */
 }

@@ -37,7 +37,7 @@ public class Etudiant {
     private String telephone;
 
     private String photo;
-
+    @JsonIgnore
     @OneToMany(mappedBy = "etudiant")
     private List<Inscription> inscriptions;
 

@@ -29,10 +29,12 @@ public class InscriptionController {
         try {
             return inscriptionHelper.saveInscription(inscription);
 
-        }catch (Exception e){
-            throw new InscriptionException("Erreur:" +e);
+        }catch (InscriptionException e){
+            throw  e;
         }
     }
+
+
 
     @PostMapping("/paiement")
     public Paiement payer(@RequestBody Paiement paiement){

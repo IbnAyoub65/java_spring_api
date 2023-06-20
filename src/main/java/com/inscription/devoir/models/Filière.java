@@ -1,5 +1,6 @@
 package com.inscription.devoir.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,7 +22,7 @@ public class Filière {
     private UUID id;
 
     private String libelle;
-
+    @JsonIgnore
     @OneToMany(mappedBy = "filière",cascade = CascadeType.ALL)
     private List<Classe> classes;
 

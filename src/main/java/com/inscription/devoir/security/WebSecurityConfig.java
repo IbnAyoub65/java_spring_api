@@ -26,6 +26,7 @@ public class WebSecurityConfig {
         http.csrf().disable();
 
         http.authorizeHttpRequests()
+
                 .requestMatchers("/login").permitAll()
                 .requestMatchers("/user/**").hasAnyAuthority(ADMIN, USER)
                 .requestMatchers("/admin/**").hasAuthority(ADMIN)
